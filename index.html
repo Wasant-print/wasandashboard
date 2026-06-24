@@ -15,6 +15,20 @@
   --gold:#e67e22; --gold-soft:#fef3e2;
   --line:#cce0ff; --muted:#5a7aa0; --white:#fff;
 }
+
+/* LOGIN */
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0d47a1,#1565c0);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.login-box{background:#fff;border-radius:20px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;}
+.login-logo{width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#0d47a1,#1565c0);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:26px;margin:0 auto 16px;font-family:'Fraunces',serif;}
+.login-box h2{font-family:'Fraunces',serif;font-size:22px;margin-bottom:4px;color:#0a1628;}
+.login-box .sub{font-size:13px;color:#5a7aa0;margin-bottom:24px;}
+.login-field{text-align:left;margin-bottom:14px;}
+.login-field label{display:block;font-size:12.5px;font-weight:700;color:#5a7aa0;margin-bottom:5px;}
+.login-field input{width:100%;padding:11px 14px;border:1.5px solid #cce0ff;border-radius:10px;font-family:inherit;font-size:14px;box-sizing:border-box;transition:.15s;}
+.login-field input:focus{outline:none;border-color:#1565c0;box-shadow:0 0 0 3px rgba(21,101,192,.12);}
+.login-btn{width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#0d47a1,#1565c0);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:.15s;}
+.login-btn:hover{filter:brightness(.92);}
+.login-error{color:#c0392b;font-size:13px;margin-top:10px;min-height:20px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--paper);color:var(--ink);}
 
@@ -110,6 +124,26 @@ code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:
 </style>
 </head>
 <body>
+
+
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">วส</div>
+    <h2>Wasan Print</h2>
+    <p class="sub">กรุณาเข้าสู่ระบบเพื่อดูแดชบอร์ด</p>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="loginUser" placeholder="กรอก username" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="กรอก password" autocomplete="current-password">
+    </div>
+    <button class="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div class="login-error" id="loginError">Username หรือ Password ไม่ถูกต้อง</div>
+  </div>
+</div>
 
 <div class="topbar">
   <div class="brand">
@@ -258,6 +292,43 @@ code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:
 // ══════════════════════════════════════════
 // ⚙️ ตั้งค่า URL ของ Apps Script ตรงนี้
 // ══════════════════════════════════════════
+
+// ══════════════════════════════════════════
+// ⚙️ ตั้งค่า Username/Password ตรงนี้
+// ══════════════════════════════════════════
+const USERS = {
+  'admin':   'wasan2024',
+  'owner':   'print@888',
+  'staff':   'staff123'
+};
+
+function doLogin(){
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err  = document.getElementById('loginError');
+  if(USERS[user] && USERS[user] === pass){
+    document.getElementById('loginOverlay').style.display='none';
+    sessionStorage.setItem('wp_auth', user);
+    loadData();
+  } else {
+    err.style.display='block';
+    document.getElementById('loginPass').value='';
+    setTimeout(()=>err.style.display='none', 3000);
+  }
+}
+
+// Enter key to login
+document.addEventListener('DOMContentLoaded', ()=>{
+  ['loginUser','loginPass'].forEach(id=>{
+    document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+  });
+  // Check session
+  if(sessionStorage.getItem('wp_auth')){
+    document.getElementById('loginOverlay').style.display='none';
+    loadData();
+  }
+});
+
 const API_URL = 'https://script.google.com/macros/s/AKfycbzmJITF-98cDBSMohRhIKnJ6ibVcmUvnLNe4rtYHxVrRHT64WlusHappS-FAo_6Mp37lg/exec';
 
 let allRows=[], monthlyChart, categoryChart, dailyChart, linePeriod='day';
@@ -533,7 +604,7 @@ document.getElementById('monthFilter').addEventListener('change',refreshAll);
 document.getElementById('dayFilter').addEventListener('change',renderDailySummary);
 document.getElementById('refreshBtn').addEventListener('click',loadData);
 
-loadData();
+// loadData() is called after login
 </script>
 </body>
 </html>
