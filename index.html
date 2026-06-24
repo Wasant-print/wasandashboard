@@ -155,7 +155,7 @@ code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:
   </div>
   <div class="topbar-right">
     <div class="status-bar" id="status"><span class="spin"></span>กำลังโหลด...</div>
-    <button class="btn white sm" id="refreshBtn">↻ รีเฟรช</button>
+    <span id="loggedInUser" style="font-size:12px;color:rgba(255,255,255,.8);"></span><button class="btn white sm" id="refreshBtn">↻ รีเฟรช</button><button class="btn sm" id="logoutBtn" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">🚪 ออกจากระบบ</button>
   </div>
 </div>
 
@@ -309,6 +309,7 @@ function doLogin(){
   if(USERS[user] && USERS[user] === pass){
     document.getElementById('loginOverlay').style.display='none';
     sessionStorage.setItem('wp_auth', user);
+    document.getElementById('loggedInUser').textContent = '👤 ' + user;
     loadData();
   } else {
     err.style.display='block';
@@ -323,8 +324,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
   });
   // Check session
-  if(sessionStorage.getItem('wp_auth')){
+  const savedUser = sessionStorage.getItem('wp_auth');
+  if(savedUser){
     document.getElementById('loginOverlay').style.display='none';
+    document.getElementById('loggedInUser').textContent = '👤 ' + savedUser;
     loadData();
   }
 });
@@ -603,6 +606,16 @@ function refreshAll(){
 document.getElementById('monthFilter').addEventListener('change',refreshAll);
 document.getElementById('dayFilter').addEventListener('change',renderDailySummary);
 document.getElementById('refreshBtn').addEventListener('click',loadData);
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  if(confirm('ต้องการออกจากระบบหรือไม่?')){
+    sessionStorage.removeItem('wp_auth');
+    document.getElementById('loginOverlay').style.display='flex';
+    document.getElementById('loginUser').value='';
+    document.getElementById('loginPass').value='';
+    document.getElementById('loggedInUser').textContent='';
+  }
+});
 
 // loadData() is called after login
 </script>
