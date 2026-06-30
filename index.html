@@ -121,6 +121,18 @@ td.amt.inc{color:var(--green);} td.amt.exp{color:var(--red);}
 @keyframes spin{to{transform:rotate(360deg);}}
 code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:11.5px;color:var(--primary);font-family:monospace;}
 .divider{height:1px;background:var(--line);margin:18px 0;}
+
+.upload-zone{border:2.5px dashed var(--line);border-radius:14px;padding:30px;text-align:center;cursor:pointer;transition:.2s;background:var(--primary-soft);}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--primary);background:var(--primary-mid);}
+.upload-zone input{display:none;}
+.upload-zone .ico{font-size:38px;margin-bottom:10px;}
+.upload-zone p{font-size:13px;color:var(--muted);}
+.preview-img{max-width:100%;max-height:220px;border-radius:10px;margin:14px 0;border:2px solid var(--line);display:block;}
+.result-box{background:var(--primary-soft);border:1.5px solid var(--primary-mid);border-radius:12px;padding:14px;margin:12px 0;}
+.result-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--primary-mid);font-size:13px;}
+.result-row:last-child{border:none;}
+.result-key{color:var(--muted);font-weight:700;}
+
 </style>
 </head>
 <body>
@@ -163,6 +175,7 @@ code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:
   <button class="tab active" onclick="showTab('dash',this)">📊 แดชบอร์ด</button>
   <button class="tab" onclick="showTab('daily',this)">📅 สรุปรายวัน</button>
   <button class="tab" onclick="showTab('entry',this)">➕ บันทึกรายการ</button>
+  <button class="tab" onclick="showTab('receipt',this)">📷 สแกนใบเสร็จ</button>
   <button class="tab" onclick="showTab('line',this)">🔔 LINE OA</button>
   <button class="tab" onclick="showTab('export',this)">📤 Export</button>
 </div>
@@ -238,6 +251,68 @@ code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:
     <button class="btn green" id="manualSaveBtn">💾 บันทึกเข้า Sheet</button>
     <div id="manualStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>
     <div class="note" style="margin-top:14px;">💡 ถ้าต้องการบันทึกหลายรายการพร้อมกัน แนะนำให้กรอกใน <strong>Google Sheet</strong> โดยตรงครับ ไม่มีลิมิตและสะดวกกว่า</div>
+  </div>
+</div>
+
+
+<!-- RECEIPT SCAN -->
+<div class="section" id="tab-receipt">
+  <div class="card" style="margin-top:16px;">
+    <h3>📷 สแกนใบเสร็จ / สลิป → บันทึกอัตโนมัติ</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">ถ่ายรูปหรืออัปโหลดใบเสร็จ AI จะวิเคราะห์และกรอกข้อมูลให้อัตโนมัติ รองรับ iPhone, iPad, Laptop</p>
+
+    <div class="field" style="margin-bottom:16px;">
+      <label>Gemini API Key <span style="font-weight:400;">(กรอกครั้งเดียว ระบบจะจำไว้ในเครื่องนี้)</span></label>
+      <input type="password" id="geminiKeyInput" placeholder="วาง Gemini API Key ที่นี่">
+      <div style="font-size:11.5px;color:var(--muted);margin-top:5px;">ขอฟรีได้ที่ <code>aistudio.google.com</code> — กด Get API key</div>
+    </div>
+
+    <label class="upload-zone" id="uploadZone">
+      <input type="file" id="receiptFile" accept="image/*" capture="environment">
+      <div class="ico">📷</div>
+      <p><strong>กดเพื่อถ่ายรูปหรือเลือกไฟล์</strong></p>
+      <p style="margin-top:6px;">รองรับ JPG, PNG, HEIC — iPhone/iPad จะเปิดกล้องอัตโนมัติ</p>
+    </label>
+
+    <img id="receiptPreview" class="preview-img" style="display:none;">
+
+    <div id="analyzeSection" style="display:none;margin:12px 0;">
+      <div style="display:flex;gap:10px;">
+        <button class="btn primary" id="analyzeBtn">🔍 วิเคราะห์ด้วย AI</button>
+        <button class="btn secondary" id="clearReceiptBtn">✕ ล้าง</button>
+      </div>
+    </div>
+
+    <div id="resultSection" style="display:none;">
+      <div class="divider"></div>
+      <p style="font-size:13px;font-weight:700;margin-bottom:10px;">ผลการวิเคราะห์ AI:</p>
+      <div class="result-box">
+        <div class="result-row"><span class="result-key">วันที่</span><span id="rDate">—</span></div>
+        <div class="result-row"><span class="result-key">ประเภท</span><span id="rType">—</span></div>
+        <div class="result-row"><span class="result-key">หมวดหมู่</span><span id="rCat">—</span></div>
+        <div class="result-row"><span class="result-key">จำนวนเงิน</span><span id="rAmount">—</span></div>
+        <div class="result-row"><span class="result-key">รายละเอียด</span><span id="rDetail">—</span></div>
+      </div>
+
+      <p style="font-size:13px;font-weight:700;margin-bottom:12px;">ตรวจสอบ / แก้ไขก่อนบันทึก:</p>
+      <div class="form-row">
+        <div class="field"><label>วันที่</label><input type="date" id="editDate"></div>
+        <div class="field"><label>ประเภท</label><select id="editType"><option value="รายรับ">รายรับ</option><option value="รายจ่าย">รายจ่าย</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>หมวดหมู่</label><input type="text" id="editCat" placeholder="เช่น วัตถุดิบ, ค่าจ้าง"></div>
+        <div class="field"><label>จำนวนเงิน (บาท)</label><input type="number" id="editAmount" min="0" step="0.01"></div>
+      </div>
+      <div class="field" style="margin-bottom:14px;"><label>รายละเอียด</label><input type="text" id="editDetail"></div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn green" id="saveReceiptBtn">💾 บันทึกเข้า Sheet</button>
+        <button class="btn secondary" id="rescanBtn">🔄 สแกนใหม่</button>
+      </div>
+      <div id="saveStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>
+    </div>
+
+    <div class="note">⚙️ ใช้ Google Gemini API (ฟรี) ในการวิเคราะห์รูป — กรอก API Key ด้านบนแล้วระบบจะจำไว้ในเครื่องนี้ (ไม่ส่งขึ้น GitHub หรือเซิร์ฟเวอร์ใดๆ)</div>
   </div>
 </div>
 
@@ -615,6 +690,147 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>{
     document.getElementById('loginPass').value='';
     document.getElementById('loggedInUser').textContent='';
   }
+});
+
+
+// ══════════════════════════════════════════
+// Gemini API Key — ผู้ใช้กรอกเองในหน้าเว็บ เก็บใน localStorage (ไม่ขึ้น GitHub)
+// ══════════════════════════════════════════
+function getGeminiKey(){
+  return document.getElementById('geminiKeyInput').value.trim() || localStorage.getItem('gemini_api_key') || '';
+}
+
+let receiptBase64 = null, receiptMime = null;
+
+// โหลด key ที่เคยบันทึกไว้ + บันทึกอัตโนมัติเมื่อพิมพ์
+document.addEventListener('DOMContentLoaded', ()=>{
+  const savedKey = localStorage.getItem('gemini_api_key');
+  if(savedKey) document.getElementById('geminiKeyInput').value = savedKey;
+  document.getElementById('geminiKeyInput').addEventListener('change', e=>{
+    localStorage.setItem('gemini_api_key', e.target.value.trim());
+  });
+});
+
+document.getElementById('receiptFile').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  receiptMime = file.type || 'image/jpeg';
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const dataUrl = ev.target.result;
+    receiptBase64 = dataUrl.split(',')[1];
+    document.getElementById('receiptPreview').src = dataUrl;
+    document.getElementById('receiptPreview').style.display = 'block';
+    document.getElementById('analyzeSection').style.display = 'block';
+    document.getElementById('resultSection').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+const uz = document.getElementById('uploadZone');
+uz.addEventListener('dragover', e=>{ e.preventDefault(); uz.classList.add('drag'); });
+uz.addEventListener('dragleave', ()=> uz.classList.remove('drag'));
+uz.addEventListener('drop', e=>{
+  e.preventDefault(); uz.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if(f){
+    const dt = new DataTransfer(); dt.items.add(f);
+    document.getElementById('receiptFile').files = dt.files;
+    document.getElementById('receiptFile').dispatchEvent(new Event('change'));
+  }
+});
+
+document.getElementById('analyzeBtn').addEventListener('click', async ()=>{
+  if(!receiptBase64){ alert('กรุณาเลือกรูปก่อน'); return; }
+  const geminiKey = getGeminiKey();
+  if(!geminiKey){
+    alert('กรุณากรอก Gemini API Key ก่อนใช้งานฟีเจอร์นี้ครับ\n\nขอฟรีได้ที่ aistudio.google.com');
+    return;
+  }
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true; btn.textContent = '🔍 กำลังวิเคราะห์...';
+
+  const today = new Date().toISOString().slice(0,10);
+  const prompt = `วิเคราะห์รูปใบเสร็จ/สลิป/บิลนี้ แล้วตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่นหรือ markdown:
+{"date":"YYYY-MM-DD","type":"รายรับ หรือ รายจ่าย","category":"หมวดหมู่","amount":ตัวเลข,"detail":"รายละเอียดสั้นๆ"}
+หมวดหมู่เลือกจาก: วัตถุดิบ, ค่าจ้าง, ค่าไฟ, ค่าน้ำ, ค่าเช่า, ค่าขนส่ง, อุปกรณ์, การตลาด, งานพิมพ์, ซ่อมแซม, ทั่วไป
+ถ้าไม่เจอวันที่ใช้: ${today}
+ใบเสร็จซื้อของ = รายจ่าย, สลิปรับโอนเงิน = รายรับ`;
+
+  try{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{ parts:[
+          { inline_data: { mime_type: receiptMime, data: receiptBase64 } },
+          { text: prompt }
+        ]}]
+      })
+    });
+    const json = await res.json();
+    if(!res.ok) throw new Error(json.error?.message || 'Gemini API error');
+
+    let text = json.candidates[0].content.parts[0].text.trim();
+    text = text.replace(/```json|```/g, '').trim();
+    const result = JSON.parse(text);
+
+    document.getElementById('rDate').textContent = result.date || '—';
+    document.getElementById('rType').textContent = result.type || '—';
+    document.getElementById('rCat').textContent = result.category || '—';
+    document.getElementById('rAmount').textContent = fmt(result.amount || 0);
+    document.getElementById('rDetail').textContent = result.detail || '—';
+
+    document.getElementById('editDate').value = result.date || today;
+    document.getElementById('editType').value = result.type === 'รายรับ' ? 'รายรับ' : 'รายจ่าย';
+    document.getElementById('editCat').value = result.category || '';
+    document.getElementById('editAmount').value = result.amount || '';
+    document.getElementById('editDetail').value = result.detail || '';
+    document.getElementById('resultSection').style.display = 'block';
+    document.getElementById('saveStatus').textContent = '';
+  }catch(err){
+    alert('วิเคราะห์ไม่สำเร็จ: ' + err.message);
+  }
+  btn.disabled = false; btn.textContent = '🔍 วิเคราะห์ด้วย AI';
+});
+
+function clearReceipt(){
+  receiptBase64 = null; receiptMime = null;
+  document.getElementById('receiptPreview').style.display = 'none';
+  document.getElementById('analyzeSection').style.display = 'none';
+  document.getElementById('resultSection').style.display = 'none';
+  document.getElementById('receiptFile').value = '';
+  document.getElementById('saveStatus').textContent = '';
+}
+document.getElementById('clearReceiptBtn').addEventListener('click', clearReceipt);
+document.getElementById('rescanBtn').addEventListener('click', clearReceipt);
+
+document.getElementById('saveReceiptBtn').addEventListener('click', async ()=>{
+  const entry = {
+    date: document.getElementById('editDate').value,
+    type: document.getElementById('editType').value,
+    category: document.getElementById('editCat').value,
+    amount: parseFloat(document.getElementById('editAmount').value) || 0,
+    detail: document.getElementById('editDetail').value
+  };
+  if(!entry.date || !entry.amount){ alert('กรุณากรอกวันที่และจำนวนเงิน'); return; }
+  const btn = document.getElementById('saveReceiptBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  const st = document.getElementById('saveStatus');
+  try{
+    const res = await fetch(API_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'append', entry })
+    });
+    const json = await res.json();
+    if(json.success){
+      st.textContent = '✅ บันทึกสำเร็จ!'; st.style.color = 'var(--green)';
+      loadData();
+    } else throw new Error(json.error || 'ไม่สำเร็จ');
+  }catch(err){
+    st.textContent = '❌ บันทึกไม่สำเร็จ: ' + err.message; st.style.color = 'var(--red)';
+  }
+  btn.disabled = false; btn.textContent = '💾 บันทึกเข้า Sheet';
 });
 
 // loadData() is called after login
