@@ -261,12 +261,6 @@ code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:
     <h3>📷 สแกนใบเสร็จ / สลิป → บันทึกอัตโนมัติ</h3>
     <p style="font-size:13px;color:var(--muted);margin-bottom:18px;">ถ่ายรูปหรืออัปโหลดใบเสร็จ AI จะวิเคราะห์และกรอกข้อมูลให้อัตโนมัติ รองรับ iPhone, iPad, Laptop</p>
 
-    <div class="field" style="margin-bottom:16px;">
-      <label>Gemini API Key <span style="font-weight:400;">(กรอกครั้งเดียว ระบบจะจำไว้ในเครื่องนี้)</span></label>
-      <input type="password" id="geminiKeyInput" placeholder="วาง Gemini API Key ที่นี่">
-      <div style="font-size:11.5px;color:var(--muted);margin-top:5px;">ขอฟรีได้ที่ <code>aistudio.google.com</code> — กด Get API key</div>
-    </div>
-
     <label class="upload-zone" id="uploadZone">
       <input type="file" id="receiptFile" accept="image/*" capture="environment">
       <div class="ico">📷</div>
@@ -285,34 +279,42 @@ code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:
 
     <div id="resultSection" style="display:none;">
       <div class="divider"></div>
-      <p style="font-size:13px;font-weight:700;margin-bottom:10px;">ผลการวิเคราะห์ AI:</p>
-      <div class="result-box">
-        <div class="result-row"><span class="result-key">วันที่</span><span id="rDate">—</span></div>
-        <div class="result-row"><span class="result-key">ประเภท</span><span id="rType">—</span></div>
-        <div class="result-row"><span class="result-key">หมวดหมู่</span><span id="rCat">—</span></div>
-        <div class="result-row"><span class="result-key">จำนวนเงิน</span><span id="rAmount">—</span></div>
-        <div class="result-row"><span class="result-key">รายละเอียด</span><span id="rDetail">—</span></div>
+      <p style="font-size:13px;font-weight:700;margin-bottom:6px;">ผลการวิเคราะห์ AI — พบ <span id="itemCount">0</span> รายการ</p>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">ตรวจสอบและแก้ไขแต่ละรายการก่อนบันทึก ลบรายการที่ไม่ถูกต้องได้ด้วยปุ่ม ✕</p>
+
+      <div class="tscroll" style="max-height:420px;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px;">#</th>
+              <th>วันที่</th>
+              <th>ประเภท</th>
+              <th>หมวดหมู่</th>
+              <th>รายละเอียด</th>
+              <th style="text-align:right;">จำนวนเงิน</th>
+              <th style="width:36px;"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsTableBody"></tbody>
+        </table>
       </div>
 
-      <p style="font-size:13px;font-weight:700;margin-bottom:12px;">ตรวจสอบ / แก้ไขก่อนบันทึก:</p>
-      <div class="form-row">
-        <div class="field"><label>วันที่</label><input type="date" id="editDate"></div>
-        <div class="field"><label>ประเภท</label><select id="editType"><option value="รายรับ">รายรับ</option><option value="รายจ่าย">รายจ่าย</option></select></div>
+      <div class="card" style="margin-top:14px;background:var(--primary-soft);border-color:var(--primary-mid);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <span style="font-weight:700;font-size:14px;">ยอดรวมทั้งหมด</span>
+          <span style="font-weight:700;font-size:20px;color:var(--primary);" id="itemsTotalAmount">฿0</span>
+        </div>
       </div>
-      <div class="form-row">
-        <div class="field"><label>หมวดหมู่</label><input type="text" id="editCat" placeholder="เช่น วัตถุดิบ, ค่าจ้าง"></div>
-        <div class="field"><label>จำนวนเงิน (บาท)</label><input type="number" id="editAmount" min="0" step="0.01"></div>
-      </div>
-      <div class="field" style="margin-bottom:14px;"><label>รายละเอียด</label><input type="text" id="editDetail"></div>
 
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn green" id="saveReceiptBtn">💾 บันทึกเข้า Sheet</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+        <button class="btn green" id="saveReceiptBtn">💾 บันทึกทั้งหมดเข้า Sheet</button>
+        <button class="btn secondary" id="addItemBtn">➕ เพิ่มรายการ</button>
         <button class="btn secondary" id="rescanBtn">🔄 สแกนใหม่</button>
       </div>
       <div id="saveStatus" style="margin-top:10px;font-size:13px;font-weight:600;"></div>
     </div>
 
-    <div class="note">⚙️ ใช้ Google Gemini API (ฟรี) ในการวิเคราะห์รูป — กรอก API Key ด้านบนแล้วระบบจะจำไว้ในเครื่องนี้ (ไม่ส่งขึ้น GitHub หรือเซิร์ฟเวอร์ใดๆ)</div>
+    <div class="note">⚙️ ใช้ Google Gemini API (ฟรี) วิเคราะห์ผ่าน Apps Script — ไม่ต้องกรอก API Key ในเครื่อง ใช้ได้ทันทีทุกเครื่อง<br>📝 รองรับทั้งใบเสร็จรายการเดียว และสมุดบันทึก/ใบสั่งซื้อที่มีหลายรายการในหน้าเดียว</div>
   </div>
 </div>
 
@@ -344,19 +346,42 @@ code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:
 <div class="section" id="tab-export">
   <div class="card" style="margin-top:16px;">
     <h3>📤 Export รายงาน</h3>
-    <div class="period-bar" style="margin-bottom:22px;">
-      <span class="tag">ช่วงเวลา</span>
-      <select id="exportPeriod">
-        <option value="day">วันที่เลือก</option>
-        <option value="month" selected>เดือนที่เลือก</option>
-        <option value="year">ปีปัจจุบัน</option>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">เลือกช่วงเวลาที่ต้องการ Export — รองรับการเลือกวัน เดือน ปีได้อย่างละเอียด</p>
+
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px;">
+      <span class="tag">ประเภทช่วงเวลา</span>
+      <select id="exportPeriod" onchange="toggleExportFields()" style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);font-family:inherit;font-size:14px;background:#fff;">
+        <option value="custom" selected>กำหนดเองระบุวันที่</option>
+        <option value="day">วันเดียว</option>
+        <option value="month">ทั้งเดือน</option>
+        <option value="year">ทั้งปี</option>
         <option value="all">ทั้งหมด</option>
       </select>
     </div>
+
+    <div id="exportCustom" style="background:var(--primary-soft);border:1.5px solid var(--primary-mid);border-radius:12px;padding:16px;margin-bottom:16px;">
+      <div class="form-row" style="margin-bottom:0;">
+        <div class="field"><label>ตั้งแต่วันที่</label><input type="date" id="exportFrom"></div>
+        <div class="field"><label>ถึงวันที่</label><input type="date" id="exportTo"></div>
+      </div>
+    </div>
+
+    <div id="exportDayPick" style="display:none;margin-bottom:16px;">
+      <div class="field"><label>เลือกวันที่</label><input type="date" id="exportDay" style="max-width:220px;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13.5px;"></div>
+    </div>
+    <div id="exportMonthPick" style="display:none;margin-bottom:16px;">
+      <div class="field"><label>เลือกเดือน / ปี</label><input type="month" id="exportMonth" style="max-width:220px;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13.5px;"></div>
+    </div>
+    <div id="exportYearPick" style="display:none;margin-bottom:16px;">
+      <div class="field"><label>เลือกปี (ค.ศ.)</label><input type="number" id="exportYear" min="2000" max="2100" style="max-width:140px;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13.5px;"></div>
+    </div>
+
+    <div id="exportPreview" style="font-size:13px;color:var(--muted);margin-bottom:18px;padding:10px 14px;background:#fff;border-radius:10px;border:1px dashed var(--line);"></div>
+
     <div class="export-grid">
-      <div class="export-card"><div class="eico">📄</div><h4>CSV</h4><p>เปิดได้ใน Excel / Google Sheets</p><button class="btn primary" onclick="exportCSV()">ดาวน์โหลด CSV</button></div>
-      <div class="export-card"><div class="eico">🖨️</div><h4>พิมพ์ / PDF</h4><p>บันทึกเป็น PDF ผ่านเบราว์เซอร์</p><button class="btn primary" onclick="exportPrint()">เปิดหน้าพิมพ์</button></div>
-      <div class="export-card"><div class="eico">📊</div><h4>สรุปยอด TEXT</h4><p>คัดลอกไปวางใน LINE / Email</p><button class="btn primary" onclick="copyExportSummary()">คัดลอกสรุป</button></div>
+      <div class="export-card"><div class="eico">📄</div><h4>CSV</h4><p>รายการทั้งหมดในช่วงที่เลือก เปิดได้ใน Excel / Google Sheets</p><button class="btn primary" onclick="exportCSV()">ดาวน์โหลด CSV</button></div>
+      <div class="export-card"><div class="eico">🖨️</div><h4>พิมพ์ / PDF</h4><p>เปิดหน้าสรุปรายงานพร้อมพิมพ์หรือบันทึก PDF</p><button class="btn primary" onclick="exportPrint()">เปิดหน้าพิมพ์</button></div>
+      <div class="export-card"><div class="eico">📊</div><h4>สรุปยอด TEXT</h4><p>คัดลอกสรุปไปวางใน LINE / Email</p><button class="btn primary" onclick="copyExportSummary()">คัดลอกสรุป</button></div>
     </div>
   </div>
 </div>
@@ -445,6 +470,7 @@ async function loadData(){
     populateFilters();
     refreshAll();
     document.getElementById('manualDate').value=dayKey(new Date());
+    toggleExportFields();
   }catch(err){
     document.getElementById('status').textContent='Error: '+err.message;
     document.getElementById('emptyState').innerHTML='<div class="ico">⚠️</div><div><strong>โหลดไม่สำเร็จ</strong></div><div style="font-size:13px;margin-top:6px;color:var(--red)">'+err.message+'</div>';
@@ -498,11 +524,38 @@ function renderCategoryChart(rows){
 }
 
 function renderTopLists(rows){
+  // Top 10 รายรับสูงสุดทีละรายการ
   const inc=rows.filter(r=>r.type==='รายรับ').sort((a,b)=>b.amount-a.amount).slice(0,10);
   const exp=rows.filter(r=>r.type==='รายจ่าย').sort((a,b)=>b.amount-a.amount).slice(0,10);
   const rH=(r,i,t)=>`<tr><td>${i+1}</td><td>${fmtDate(r.date)}</td><td>${r.category}</td><td>${r.detail}</td><td class="amt ${t}">${t==='exp'?'-':''}${fmt(r.amount)}</td></tr>`;
   document.getElementById('topIncomeBody').innerHTML=inc.map((r,i)=>rH(r,i,'inc')).join('')||'<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">ไม่มีข้อมูล</td></tr>';
   document.getElementById('topExpenseBody').innerHTML=exp.map((r,i)=>rH(r,i,'exp')).join('')||'<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">ไม่มีข้อมูล</td></tr>';
+
+  // Top 10 สินค้าขายดี (รายรับ) แยกตามรายละเอียด/หมวดหมู่
+  const incByCat={};
+  rows.filter(r=>r.type==='รายรับ').forEach(r=>{
+    const key = (r.detail||'').trim() || r.category || 'อื่นๆ';
+    if(!incByCat[key]) incByCat[key]={total:0,count:0};
+    incByCat[key].total += r.amount;
+    incByCat[key].count++;
+  });
+  const topSelling=Object.entries(incByCat).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
+  document.getElementById('topSellingBody').innerHTML=topSelling.map((e,i)=>
+    `<tr><td>${i+1}</td><td>${e[0]}</td><td class="amt inc">${fmt(e[1].total)}</td><td style="text-align:right;color:var(--muted)">${e[1].count} ครั้ง</td></tr>`
+  ).join('')||'<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:16px">ไม่มีข้อมูล</td></tr>';
+
+  // Top 10 รายจ่ายสูงสุดตามหมวดหมู่
+  const expByCat={};
+  rows.filter(r=>r.type==='รายจ่าย').forEach(r=>{
+    const key = r.category || (r.detail||'').trim() || 'อื่นๆ';
+    if(!expByCat[key]) expByCat[key]={total:0,count:0};
+    expByCat[key].total += r.amount;
+    expByCat[key].count++;
+  });
+  const topExpCat=Object.entries(expByCat).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
+  document.getElementById('topExpCatBody').innerHTML=topExpCat.map((e,i)=>
+    `<tr><td>${i+1}</td><td>${e[0]}</td><td class="amt exp">-${fmt(e[1].total)}</td><td style="text-align:right;color:var(--muted)">${e[1].count} ครั้ง</td></tr>`
+  ).join('')||'<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:16px">ไม่มีข้อมูล</td></tr>';
 }
 
 function renderTable(rows){
@@ -624,12 +677,59 @@ document.getElementById('manualSaveBtn').addEventListener('click',async()=>{
   btn.disabled=false;btn.textContent='💾 บันทึกเข้า Sheet';
 });
 
+function toggleExportFields(){
+  const p=document.getElementById('exportPeriod').value;
+  document.getElementById('exportCustom').style.display=p==='custom'?'block':'none';
+  document.getElementById('exportDayPick').style.display=p==='day'?'block':'none';
+  document.getElementById('exportMonthPick').style.display=p==='month'?'block':'none';
+  document.getElementById('exportYearPick').style.display=p==='year'?'block':'none';
+  // set defaults
+  const now=new Date();
+  if(p==='custom'){
+    if(!document.getElementById('exportFrom').value){
+      document.getElementById('exportFrom').value=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+      document.getElementById('exportTo').value=now.toISOString().slice(0,10);
+    }
+  }
+  if(p==='day'&&!document.getElementById('exportDay').value) document.getElementById('exportDay').value=dayKey(now);
+  if(p==='month'&&!document.getElementById('exportMonth').value) document.getElementById('exportMonth').value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  if(p==='year'&&!document.getElementById('exportYear').value) document.getElementById('exportYear').value=now.getFullYear();
+  updateExportPreview();
+}
+
+function updateExportPreview(){
+  const rows=getExportRows();
+  const inc=rows.filter(r=>r.type==='รายรับ'),exp=rows.filter(r=>r.type==='รายจ่าย');
+  const iT=inc.reduce((s,r)=>s+r.amount,0),eT=exp.reduce((s,r)=>s+r.amount,0);
+  const el=document.getElementById('exportPreview');
+  if(!el)return;
+  el.innerHTML=`พบ <strong>${rows.length} รายการ</strong> — รายรับ <strong style="color:var(--green)">${fmt(iT)}</strong> &nbsp;|&nbsp; รายจ่าย <strong style="color:var(--red)">${fmt(eT)}</strong>`;
+}
+
 function getExportRows(){
-  const p=document.getElementById('exportPeriod').value,now=new Date();
-  if(p==='day'){const t=document.getElementById('dayFilter').value;return allRows.filter(r=>dayKey(r.date)===t);}
-  if(p==='month'){const t=document.getElementById('monthFilter').value;return t==='all'?allRows:allRows.filter(r=>monthKey(r.date)===t);}
-  if(p==='year')return allRows.filter(r=>r.date.getFullYear()===now.getFullYear());
-  return allRows;
+  const p=document.getElementById('exportPeriod').value;
+  const now=new Date();
+  if(p==='custom'){
+    const from=new Date(document.getElementById('exportFrom').value);
+    const to=new Date(document.getElementById('exportTo').value);
+    to.setHours(23,59,59,999);
+    if(isNaN(from.getTime())||isNaN(to.getTime())) return allRows;
+    return allRows.filter(r=>r.date>=from&&r.date<=to);
+  }
+  if(p==='day'){
+    const t=document.getElementById('exportDay').value||dayKey(now);
+    return allRows.filter(r=>dayKey(r.date)===t);
+  }
+  if(p==='month'){
+    const t=document.getElementById('exportMonth').value;
+    if(!t) return allRows.filter(r=>monthKey(r.date)===monthKey(now));
+    return allRows.filter(r=>monthKey(r.date)===t);
+  }
+  if(p==='year'){
+    const y=parseInt(document.getElementById('exportYear').value)||now.getFullYear();
+    return allRows.filter(r=>r.date.getFullYear()===y);
+  }
+  return allRows; // all
 }
 
 function exportCSV(){
@@ -638,7 +738,10 @@ function exportCSV(){
   const body=rows.sort((a,b)=>a.date-b.date).map(r=>[fmtDate(r.date),r.type,r.category,r.unitPrice??'',r.qty??'',r.amount,r.detail].map(v=>`"${v}"`).join(',')).join('\n');
   const blob=new Blob(['\uFEFF'+hdr+body],{type:'text/csv;charset=utf-8'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='WasanPrint_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
+  const from=document.getElementById('exportFrom')?.value||'';
+  const to=document.getElementById('exportTo')?.value||'';
+  const fname='WasanPrint_'+(from&&to?from+'_to_'+to:new Date().toISOString().slice(0,10))+'.csv';
+  a.href=url;a.download=fname;a.click();URL.revokeObjectURL(url);
 }
 
 function exportPrint(){
@@ -648,7 +751,7 @@ function exportPrint(){
   const tRows=rows.sort((a,b)=>a.date-b.date).map(r=>`<tr><td>${fmtDate(r.date)}</td><td>${r.type}</td><td>${r.category}</td><td style="text-align:right">${fmt(r.amount)}</td><td>${r.detail}</td></tr>`).join('');
   const html=`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><title>รายงาน Wasan Print</title>
   <style>body{font-family:Sarabun,sans-serif;padding:28px;color:#0a1628;}h1{font-size:20px;color:#1565c0;margin-bottom:4px;}p{color:#5a7aa0;font-size:13px;margin-bottom:22px;}.s{display:inline-block;background:#e3f0ff;border-radius:10px;padding:10px 16px;margin:0 8px 16px 0;}.s .l{font-size:11px;color:#5a7aa0;font-weight:700;}.s .v{font-size:20px;font-weight:700;margin-top:3px;}table{width:100%;border-collapse:collapse;font-size:13px;}th{background:#1565c0;color:#fff;padding:8px 10px;text-align:left;font-size:11px;}td{padding:7px 10px;border-bottom:1px solid #cce0ff;}tr:nth-child(even) td{background:#f0f6ff;}@media print{body{padding:0;}}</style></head><body>
-  <h1>📊 รายงาน Wasan Print</h1><p>พิมพ์เมื่อ ${new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})}</p>
+  <h1>📊 รายงาน Wasan Print</h1><p>ช่วงเวลา: ${(()=>{const p=document.getElementById('exportPeriod')?.value;const f=document.getElementById('exportFrom')?.value;const t=document.getElementById('exportTo')?.value;const m=document.getElementById('exportMonth')?.value;const y=document.getElementById('exportYear')?.value;const d=document.getElementById('exportDay')?.value;if(p==='custom'&&f&&t)return f+' ถึง '+t;if(p==='month'&&m)return m;if(p==='year'&&y)return 'ปี '+y;if(p==='day'&&d)return d;return 'ทั้งหมด';})()}</p><p>พิมพ์เมื่อ ${new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'})}</p>
   <div><div class="s"><div class="l">รายรับรวม</div><div class="v" style="color:#1a7a4a">${fmt(iT)}</div></div><div class="s"><div class="l">รายจ่ายรวม</div><div class="v" style="color:#c0392b">${fmt(eT)}</div></div><div class="s"><div class="l">คงเหลือ</div><div class="v" style="color:#1565c0">${fmt(bal)}</div></div></div>
   <table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวดหมู่</th><th>จำนวนเงิน</th><th>รายละเอียด</th></tr></thead><tbody>${tRows}</tbody></table>
   <script>window.onload=()=>window.print();<\/script></body></html>`;
@@ -679,6 +782,11 @@ function refreshAll(){
 }
 
 document.getElementById('monthFilter').addEventListener('change',refreshAll);
+document.getElementById('exportFrom').addEventListener('change',updateExportPreview);
+document.getElementById('exportTo').addEventListener('change',updateExportPreview);
+document.getElementById('exportDay').addEventListener('change',updateExportPreview);
+document.getElementById('exportMonth').addEventListener('change',updateExportPreview);
+document.getElementById('exportYear').addEventListener('change',updateExportPreview);
 document.getElementById('dayFilter').addEventListener('change',renderDailySummary);
 document.getElementById('refreshBtn').addEventListener('click',loadData);
 
@@ -693,23 +801,7 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>{
 });
 
 
-// ══════════════════════════════════════════
-// Gemini API Key — ผู้ใช้กรอกเองในหน้าเว็บ เก็บใน localStorage (ไม่ขึ้น GitHub)
-// ══════════════════════════════════════════
-function getGeminiKey(){
-  return document.getElementById('geminiKeyInput').value.trim() || localStorage.getItem('gemini_api_key') || '';
-}
-
 let receiptBase64 = null, receiptMime = null;
-
-// โหลด key ที่เคยบันทึกไว้ + บันทึกอัตโนมัติเมื่อพิมพ์
-document.addEventListener('DOMContentLoaded', ()=>{
-  const savedKey = localStorage.getItem('gemini_api_key');
-  if(savedKey) document.getElementById('geminiKeyInput').value = savedKey;
-  document.getElementById('geminiKeyInput').addEventListener('change', e=>{
-    localStorage.setItem('gemini_api_key', e.target.value.trim());
-  });
-});
 
 document.getElementById('receiptFile').addEventListener('change', e=>{
   const file = e.target.files[0];
@@ -740,52 +832,38 @@ uz.addEventListener('drop', e=>{
   }
 });
 
+let receiptItems = [];
+
 document.getElementById('analyzeBtn').addEventListener('click', async ()=>{
   if(!receiptBase64){ alert('กรุณาเลือกรูปก่อน'); return; }
-  const geminiKey = getGeminiKey();
-  if(!geminiKey){
-    alert('กรุณากรอก Gemini API Key ก่อนใช้งานฟีเจอร์นี้ครับ\n\nขอฟรีได้ที่ aistudio.google.com');
-    return;
-  }
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true; btn.textContent = '🔍 กำลังวิเคราะห์...';
-
   const today = new Date().toISOString().slice(0,10);
-  const prompt = `วิเคราะห์รูปใบเสร็จ/สลิป/บิลนี้ แล้วตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่นหรือ markdown:
-{"date":"YYYY-MM-DD","type":"รายรับ หรือ รายจ่าย","category":"หมวดหมู่","amount":ตัวเลข,"detail":"รายละเอียดสั้นๆ"}
-หมวดหมู่เลือกจาก: วัตถุดิบ, ค่าจ้าง, ค่าไฟ, ค่าน้ำ, ค่าเช่า, ค่าขนส่ง, อุปกรณ์, การตลาด, งานพิมพ์, ซ่อมแซม, ทั่วไป
-ถ้าไม่เจอวันที่ใช้: ${today}
-ใบเสร็จซื้อของ = รายจ่าย, สลิปรับโอนเงิน = รายรับ`;
 
   try{
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
+    const res = await fetch(API_URL, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        contents:[{ parts:[
-          { inline_data: { mime_type: receiptMime, data: receiptBase64 } },
-          { text: prompt }
-        ]}]
+        action: 'analyzeReceipt',
+        base64Image: receiptBase64,
+        mimeType: receiptMime
       })
     });
     const json = await res.json();
-    if(!res.ok) throw new Error(json.error?.message || 'Gemini API error');
+    if(!json.success) throw new Error(json.error || 'วิเคราะห์ไม่สำเร็จ');
 
-    let text = json.candidates[0].content.parts[0].text.trim();
-    text = text.replace(/```json|```/g, '').trim();
-    const result = JSON.parse(text);
+    receiptItems = (Array.isArray(json.data) ? json.data : [json.data]).map(item => ({
+      date: item.date || today,
+      type: item.type === 'รายรับ' ? 'รายรับ' : 'รายจ่าย',
+      category: item.category || '',
+      amount: parseFloat(item.amount) || 0,
+      unitPrice: item.unitPrice || null,
+      qty: item.qty || null,
+      detail: item.detail || ''
+    }));
 
-    document.getElementById('rDate').textContent = result.date || '—';
-    document.getElementById('rType').textContent = result.type || '—';
-    document.getElementById('rCat').textContent = result.category || '—';
-    document.getElementById('rAmount').textContent = fmt(result.amount || 0);
-    document.getElementById('rDetail').textContent = result.detail || '—';
-
-    document.getElementById('editDate').value = result.date || today;
-    document.getElementById('editType').value = result.type === 'รายรับ' ? 'รายรับ' : 'รายจ่าย';
-    document.getElementById('editCat').value = result.category || '';
-    document.getElementById('editAmount').value = result.amount || '';
-    document.getElementById('editDetail').value = result.detail || '';
+    renderItemsTable();
     document.getElementById('resultSection').style.display = 'block';
     document.getElementById('saveStatus').textContent = '';
   }catch(err){
@@ -794,8 +872,55 @@ document.getElementById('analyzeBtn').addEventListener('click', async ()=>{
   btn.disabled = false; btn.textContent = '🔍 วิเคราะห์ด้วย AI';
 });
 
+function renderItemsTable(){
+  const tbody = document.getElementById('itemsTableBody');
+  document.getElementById('itemCount').textContent = receiptItems.length;
+  tbody.innerHTML = receiptItems.map((item, i) => `
+    <tr data-idx="${i}">
+      <td>${i+1}</td>
+      <td><input type="date" value="${item.date}" onchange="updateItem(${i},'date',this.value)" style="width:130px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;"></td>
+      <td>
+        <select onchange="updateItem(${i},'type',this.value)" style="padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;">
+          <option value="รายรับ" ${item.type==='รายรับ'?'selected':''}>รายรับ</option>
+          <option value="รายจ่าย" ${item.type==='รายจ่าย'?'selected':''}>รายจ่าย</option>
+        </select>
+      </td>
+      <td><input type="text" value="${item.category}" onchange="updateItem(${i},'category',this.value)" style="width:90px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;"></td>
+      <td><input type="text" value="${item.detail}" onchange="updateItem(${i},'detail',this.value)" style="width:160px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;"></td>
+      <td><input type="number" value="${item.amount}" min="0" step="0.01" onchange="updateItem(${i},'amount',parseFloat(this.value)||0)" style="width:90px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;text-align:right;"></td>
+      <td><button onclick="removeItem(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;font-weight:700;">✕</button></td>
+    </tr>
+  `).join('');
+  updateItemsTotal();
+}
+
+function updateItem(idx, field, value){
+  receiptItems[idx][field] = value;
+  if(field === 'amount') updateItemsTotal();
+}
+
+function removeItem(idx){
+  receiptItems.splice(idx, 1);
+  renderItemsTable();
+}
+
+function updateItemsTotal(){
+  const total = receiptItems.reduce((s,item)=> s + (item.type==='รายจ่าย' ? -item.amount : item.amount), 0);
+  const sumAll = receiptItems.reduce((s,item)=> s + item.amount, 0);
+  document.getElementById('itemsTotalAmount').textContent = fmt(sumAll);
+}
+
+document.getElementById('addItemBtn').addEventListener('click', ()=>{
+  receiptItems.push({
+    date: new Date().toISOString().slice(0,10),
+    type: 'รายจ่าย', category: '', amount: 0, unitPrice: null, qty: null, detail: ''
+  });
+  renderItemsTable();
+});
+
 function clearReceipt(){
   receiptBase64 = null; receiptMime = null;
+  receiptItems = [];
   document.getElementById('receiptPreview').style.display = 'none';
   document.getElementById('analyzeSection').style.display = 'none';
   document.getElementById('resultSection').style.display = 'none';
@@ -806,31 +931,27 @@ document.getElementById('clearReceiptBtn').addEventListener('click', clearReceip
 document.getElementById('rescanBtn').addEventListener('click', clearReceipt);
 
 document.getElementById('saveReceiptBtn').addEventListener('click', async ()=>{
-  const entry = {
-    date: document.getElementById('editDate').value,
-    type: document.getElementById('editType').value,
-    category: document.getElementById('editCat').value,
-    amount: parseFloat(document.getElementById('editAmount').value) || 0,
-    detail: document.getElementById('editDetail').value
-  };
-  if(!entry.date || !entry.amount){ alert('กรุณากรอกวันที่และจำนวนเงิน'); return; }
+  if(!receiptItems.length){ alert('ไม่มีรายการให้บันทึก'); return; }
+  const invalid = receiptItems.some(item => !item.date || !item.amount);
+  if(invalid){ alert('กรุณาตรวจสอบว่าทุกรายการมีวันที่และจำนวนเงินครบถ้วน'); return; }
+
   const btn = document.getElementById('saveReceiptBtn');
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
   const st = document.getElementById('saveStatus');
   try{
     const res = await fetch(API_URL, {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ action:'append', entry })
+      body: JSON.stringify({ action:'appendBulk', entries: receiptItems })
     });
     const json = await res.json();
     if(json.success){
-      st.textContent = '✅ บันทึกสำเร็จ!'; st.style.color = 'var(--green)';
+      st.textContent = `✅ บันทึกสำเร็จ ${json.count} รายการ!`; st.style.color = 'var(--green)';
       loadData();
     } else throw new Error(json.error || 'ไม่สำเร็จ');
   }catch(err){
     st.textContent = '❌ บันทึกไม่สำเร็จ: ' + err.message; st.style.color = 'var(--red)';
   }
-  btn.disabled = false; btn.textContent = '💾 บันทึกเข้า Sheet';
+  btn.disabled = false; btn.textContent = '💾 บันทึกทั้งหมดเข้า Sheet';
 });
 
 // loadData() is called after login
