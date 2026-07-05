@@ -204,7 +204,40 @@ code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:
     <div class="charts-grid">
       <div class="card"><h3>🏆 10 อันดับรายรับสูงสุด</h3><div class="tscroll"><table><thead><tr><th>#</th><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">จำนวน(ชิ้น)</th><th style="text-align:right">จำนวนเงิน</th></tr></thead><tbody id="topIncomeBody"></tbody></table></div></div>
       <div class="card"><h3>🏆 10 อันดับรายจ่ายสูงสุด</h3><div class="tscroll"><table><thead><tr><th>#</th><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">จำนวน(ชิ้น)</th><th style="text-align:right">จำนวนเงิน</th></tr></thead><tbody id="topExpenseBody"></tbody></table></div></div>
-    </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="card"><h3>📦 สินค้าขายดี (รายรับ) Top 10</h3><div class="tscroll"><table><thead><tr><th>#</th><th>หมวด / สินค้า</th><th style="text-align:right">ยอดขายรวม</th><th style="text-align:right">จำนวน(ชิ้น)</th><th style="text-align:right">จำนวนครั้ง</th></tr></thead><tbody id="topSellingBody"></tbody></table></div></div>
+        <div class="card"><h3>💸 รายจ่ายสูงสุด Top 10 หมวดหมู่</h3><div class="tscroll"><table><thead><tr><th>#</th><th>หมวด / รายการ</th><th style="text-align:right">รายจ่ายรวม</th><th style="text-align:right">จำนวน(ชิ้น)</th><th style="text-align:right">จำนวนครั้ง</th></tr></thead><tbody id="topExpCatBody"></tbody></table></div></div>
+      </div>
+
+    
+      <div class="card" style="margin-bottom:18px;">
+        <h3>🖨️ สรุปยอดตามยี่ห้อ / ประเภทสินค้า</h3>
+        <p style="font-size:12.5px;color:var(--muted);margin-bottom:14px;">รวมยอดรับ-จ่าย และจำนวนชิ้นของสินค้าแต่ละยี่ห้อ (ค้นหาจากชื่อในคอลัมน์รายละเอียด/หมวด)</p>
+        <div class="tscroll">
+          <table>
+            <thead>
+              <tr>
+                <th>ยี่ห้อ / ประเภท</th>
+                <th style="text-align:right">รายรับรวม</th>
+                <th style="text-align:right">จำนวน(ชิ้น)รับ</th>
+                <th style="text-align:right">รายจ่ายรวม</th>
+                <th style="text-align:right">จำนวน(ชิ้น)จ่าย</th>
+                <th style="text-align:right">กำไร/ขาดทุน</th>
+              </tr>
+            </thead>
+            <tbody id="brandTableBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:12.5px;color:var(--muted);font-weight:700;">เพิ่ม/แก้ยี่ห้อ:</span>
+          <input type="text" id="brandInput" placeholder="เช่น Ricoh, HP, Pantum" style="padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;width:160px;">
+          <button class="btn primary sm" onclick="addBrand()">+ เพิ่ม</button>
+          <button class="btn secondary sm" onclick="resetBrands()">↺ รีเซ็ต</button>
+        </div>
+      </div>
+
     <div class="card"><h3>🕐 รายการล่าสุด</h3>
       <div class="tscroll"><table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>จำนวน</th><th style="text-align:right">จำนวนเงิน</th><th>รายละเอียด</th></tr></thead><tbody id="txTableBody"></tbody></table></div>
     </div>
@@ -778,6 +811,7 @@ function refreshAll(){
   renderMonthlyChart();
   renderCategoryChart(rows);
   renderTopLists(rows);
+  renderBrandTable(rows);
   renderTable(rows);
   renderDailySummary();
   buildLinePreview();
@@ -955,6 +989,77 @@ document.getElementById('saveReceiptBtn').addEventListener('click', async ()=>{
   }
   btn.disabled = false; btn.textContent = '💾 บันทึกทั้งหมดเข้า Sheet';
 });
+
+
+// ══════════════════════════════════════════
+// BRAND SUMMARY TABLE
+// ══════════════════════════════════════════
+const DEFAULT_BRANDS = ['Canon','Epson','Brother','กระดาษ A4','หมึก','Idea'];
+let activeBrands = JSON.parse(localStorage.getItem('wp_brands') || 'null') || [...DEFAULT_BRANDS];
+
+function saveBrands(){ localStorage.setItem('wp_brands', JSON.stringify(activeBrands)); }
+
+function addBrand(){
+  const val = document.getElementById('brandInput').value.trim();
+  if(!val){ alert('กรุณากรอกชื่อยี่ห้อ/ประเภท'); return; }
+  if(!activeBrands.includes(val)) activeBrands.push(val);
+  saveBrands();
+  document.getElementById('brandInput').value = '';
+  renderBrandTable(getFilteredRows());
+}
+
+function resetBrands(){
+  if(confirm('รีเซ็ตกลับเป็นยี่ห้อเริ่มต้น?')){
+    activeBrands = [...DEFAULT_BRANDS];
+    saveBrands();
+    renderBrandTable(getFilteredRows());
+  }
+}
+
+function renderBrandTable(rows){
+  const tbody = document.getElementById('brandTableBody');
+  if(!tbody) return;
+
+  const results = activeBrands.map(brand => {
+    const keyword = brand.toLowerCase();
+    const match = r => {
+      const d = (r.detail||'').toLowerCase();
+      const c = (r.category||'').toLowerCase();
+      return d.includes(keyword) || c.includes(keyword);
+    };
+    const incRows = rows.filter(r => r.type==='รายรับ' && match(r));
+    const expRows = rows.filter(r => r.type==='รายจ่าย' && match(r));
+    const incTotal = incRows.reduce((s,r)=>s+r.amount,0);
+    const expTotal = expRows.reduce((s,r)=>s+r.amount,0);
+    const incQty = incRows.reduce((s,r)=>s+(parseFloat(r.qty)||0),0);
+    const expQty = expRows.reduce((s,r)=>s+(parseFloat(r.qty)||0),0);
+    const profit = incTotal - expTotal;
+    return { brand, incTotal, expTotal, incQty, expQty, profit,
+             incCount: incRows.length, expCount: expRows.length };
+  });
+
+  tbody.innerHTML = results.map(b => `
+    <tr>
+      <td><strong>${b.brand}</strong>
+        <span style="font-size:11px;color:var(--muted);margin-left:6px;">
+          (รับ ${b.incCount} ครั้ง / จ่าย ${b.expCount} ครั้ง)
+        </span>
+        <button onclick="removeBrand('${b.brand}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;margin-left:4px;">✕</button>
+      </td>
+      <td class="amt inc">${b.incTotal>0?fmt(b.incTotal):'—'}</td>
+      <td style="text-align:right;color:var(--muted)">${b.incQty>0?b.incQty+' ชิ้น':'—'}</td>
+      <td class="amt exp">${b.expTotal>0?'-'+fmt(b.expTotal):'—'}</td>
+      <td style="text-align:right;color:var(--muted)">${b.expQty>0?b.expQty+' ชิ้น':'—'}</td>
+      <td class="amt ${b.profit>=0?'inc':'exp'}" style="font-weight:700">${fmt(Math.abs(b.profit))}${b.profit<0?' (ติดลบ)':''}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px">ไม่มีข้อมูล</td></tr>';
+}
+
+function removeBrand(name){
+  activeBrands = activeBrands.filter(b => b !== name);
+  saveBrands();
+  renderBrandTable(getFilteredRows());
+}
 
 // loadData() is called after login
 </script>
