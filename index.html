@@ -202,8 +202,8 @@ code{background:var(--primary-soft);padding:2px 7px;border-radius:5px;font-size:
       <div class="card"><h3>🍩 สัดส่วนรายจ่ายตามหมวด</h3><div class="chart-wrap"><canvas id="categoryChart"></canvas></div></div>
     </div>
     <div class="charts-grid">
-      <div class="card"><h3>🏆 10 อันดับรายรับสูงสุด</h3><div class="tscroll"><table><thead><tr><th>#</th><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">จำนวนเงิน</th></tr></thead><tbody id="topIncomeBody"></tbody></table></div></div>
-      <div class="card"><h3>🏆 10 อันดับรายจ่ายสูงสุด</h3><div class="tscroll"><table><thead><tr><th>#</th><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">จำนวนเงิน</th></tr></thead><tbody id="topExpenseBody"></tbody></table></div></div>
+      <div class="card"><h3>🏆 10 อันดับรายรับสูงสุด</h3><div class="tscroll"><table><thead><tr><th>#</th><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">จำนวน(ชิ้น)</th><th style="text-align:right">จำนวนเงิน</th></tr></thead><tbody id="topIncomeBody"></tbody></table></div></div>
+      <div class="card"><h3>🏆 10 อันดับรายจ่ายสูงสุด</h3><div class="tscroll"><table><thead><tr><th>#</th><th>วันที่</th><th>หมวด</th><th>รายละเอียด</th><th style="text-align:right">จำนวน(ชิ้น)</th><th style="text-align:right">จำนวนเงิน</th></tr></thead><tbody id="topExpenseBody"></tbody></table></div></div>
     </div>
     <div class="card"><h3>🕐 รายการล่าสุด</h3>
       <div class="tscroll"><table><thead><tr><th>วันที่</th><th>ประเภท</th><th>หมวด</th><th>จำนวน</th><th style="text-align:right">จำนวนเงิน</th><th>รายละเอียด</th></tr></thead><tbody id="txTableBody"></tbody></table></div>
@@ -527,7 +527,7 @@ function renderTopLists(rows){
   // Top 10 รายรับสูงสุดทีละรายการ
   const inc=rows.filter(r=>r.type==='รายรับ').sort((a,b)=>b.amount-a.amount).slice(0,10);
   const exp=rows.filter(r=>r.type==='รายจ่าย').sort((a,b)=>b.amount-a.amount).slice(0,10);
-  const rH=(r,i,t)=>`<tr><td>${i+1}</td><td>${fmtDate(r.date)}</td><td>${r.category}</td><td>${r.detail}</td><td class="amt ${t}">${t==='exp'?'-':''}${fmt(r.amount)}</td></tr>`;
+  const rH=(r,i,t)=>`<tr><td>${i+1}</td><td>${fmtDate(r.date)}</td><td>${r.category}</td><td>${r.detail}</td><td style="text-align:right;color:var(--muted)">${r.qty!=null&&r.qty!==''?r.qty+' ชิ้น':'—'}</td><td class="amt ${t}">${t==='exp'?'-':''}${fmt(r.amount)}</td></tr>`;
   document.getElementById('topIncomeBody').innerHTML=inc.map((r,i)=>rH(r,i,'inc')).join('')||'<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">ไม่มีข้อมูล</td></tr>';
   document.getElementById('topExpenseBody').innerHTML=exp.map((r,i)=>rH(r,i,'exp')).join('')||'<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">ไม่มีข้อมูล</td></tr>';
 
@@ -535,27 +535,29 @@ function renderTopLists(rows){
   const incByCat={};
   rows.filter(r=>r.type==='รายรับ').forEach(r=>{
     const key = (r.detail||'').trim() || r.category || 'อื่นๆ';
-    if(!incByCat[key]) incByCat[key]={total:0,count:0};
+    if(!incByCat[key]) incByCat[key]={total:0,qty:0,count:0};
     incByCat[key].total += r.amount;
+    incByCat[key].qty += (r.qty!=null&&r.qty!==''?parseFloat(r.qty)||0:0);
     incByCat[key].count++;
   });
   const topSelling=Object.entries(incByCat).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
   document.getElementById('topSellingBody').innerHTML=topSelling.map((e,i)=>
-    `<tr><td>${i+1}</td><td>${e[0]}</td><td class="amt inc">${fmt(e[1].total)}</td><td style="text-align:right;color:var(--muted)">${e[1].count} ครั้ง</td></tr>`
-  ).join('')||'<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:16px">ไม่มีข้อมูล</td></tr>';
+    `<tr><td>${i+1}</td><td>${e[0]}</td><td class="amt inc">${fmt(e[1].total)}</td><td style="text-align:right;color:var(--muted)">${e[1].qty>0?e[1].qty+' ชิ้น':'—'}</td><td style="text-align:right;color:var(--muted)">${e[1].count} ครั้ง</td></tr>`
+  ).join('')||'<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">ไม่มีข้อมูล</td></tr>';
 
   // Top 10 รายจ่ายสูงสุดตามหมวดหมู่
   const expByCat={};
   rows.filter(r=>r.type==='รายจ่าย').forEach(r=>{
     const key = r.category || (r.detail||'').trim() || 'อื่นๆ';
-    if(!expByCat[key]) expByCat[key]={total:0,count:0};
+    if(!expByCat[key]) expByCat[key]={total:0,qty:0,count:0};
     expByCat[key].total += r.amount;
+    expByCat[key].qty += (r.qty!=null&&r.qty!==''?parseFloat(r.qty)||0:0);
     expByCat[key].count++;
   });
   const topExpCat=Object.entries(expByCat).sort((a,b)=>b[1].total-a[1].total).slice(0,10);
   document.getElementById('topExpCatBody').innerHTML=topExpCat.map((e,i)=>
-    `<tr><td>${i+1}</td><td>${e[0]}</td><td class="amt exp">-${fmt(e[1].total)}</td><td style="text-align:right;color:var(--muted)">${e[1].count} ครั้ง</td></tr>`
-  ).join('')||'<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:16px">ไม่มีข้อมูล</td></tr>';
+    `<tr><td>${i+1}</td><td>${e[0]}</td><td class="amt exp">-${fmt(e[1].total)}</td><td style="text-align:right;color:var(--muted)">${e[1].qty>0?e[1].qty+' ชิ้น':'—'}</td><td style="text-align:right;color:var(--muted)">${e[1].count} ครั้ง</td></tr>`
+  ).join('')||'<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">ไม่มีข้อมูล</td></tr>';
 }
 
 function renderTable(rows){
