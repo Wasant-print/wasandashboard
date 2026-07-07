@@ -122,6 +122,34 @@ td.amt.inc{color:var(--green);}.td.amt.exp{color:var(--red);}
 .picker-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);cursor:pointer;font-size:13.5px;transition:.15s;}
 .picker-item:hover{background:var(--primary-soft);border-color:var(--primary);}
 .picker-item.selected{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);font-weight:700;}
+
+/* SIDEBAR */
+.sidebar{position:fixed;top:0;left:0;height:100%;width:240px;background:linear-gradient(180deg,var(--primary-dark) 0%,var(--primary) 100%);z-index:1000;transform:translateX(-100%);transition:transform .3s ease;box-shadow:4px 0 20px rgba(0,0,0,.3);display:flex;flex-direction:column;}
+.sidebar.open{transform:translateX(0);}
+.sidebar-header{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:space-between;}
+.sidebar-brand{display:flex;align-items:center;gap:10px;}
+.sidebar-brand .mark{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Fraunces',serif;font-weight:700;font-size:16px;}
+.sidebar-brand span{color:#fff;font-family:'Fraunces',serif;font-size:15px;font-weight:700;}
+.sidebar-close{background:none;border:none;color:rgba(255,255,255,.7);font-size:20px;cursor:pointer;padding:4px;}
+.sidebar-close:hover{color:#fff;}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto;}
+.sidebar-item{display:flex;align-items:center;gap:12px;padding:12px 20px;color:rgba(255,255,255,.7);cursor:pointer;transition:.15s;border:none;background:none;width:100%;text-align:left;font-family:inherit;font-size:14px;font-weight:600;}
+.sidebar-item:hover{background:rgba(255,255,255,.1);color:#fff;}
+.sidebar-item.active{background:rgba(255,255,255,.18);color:#fff;border-left:3px solid #64b5f6;}
+.sidebar-item .ico{font-size:18px;width:24px;text-align:center;}
+.sidebar-footer{padding:16px 18px;border-top:1px solid rgba(255,255,255,.15);}
+.sidebar-user{font-size:12px;color:rgba(255,255,255,.7);margin-bottom:10px;}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:none;}
+.sidebar-overlay.show{display:block;}
+/* HAMBURGER */
+.hamburger{background:none;border:none;cursor:pointer;padding:8px;display:flex;flex-direction:column;gap:5px;}
+.hamburger span{display:block;width:22px;height:2px;background:#fff;border-radius:2px;transition:.3s;}
+/* TOPBAR UPDATE */
+.topbar{position:sticky;top:0;z-index:900;}
+/* HIDE OLD TAB BAR */
+.tab-bar{display:none;}
+/* CONTENT SHIFT */
+
 /* MISC */
 .empty{text-align:center;padding:50px 20px;color:var(--muted);}
 .empty .ico{font-size:42px;margin-bottom:10px;}
@@ -147,6 +175,33 @@ tfoot tr td{font-weight:700;border-top:2px solid var(--line);border-bottom:none;
   </div>
 </div>
 
+
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <div class="mark">วส</div>
+      <span>Wasan Print</span>
+    </div>
+    <button class="sidebar-close" onclick="closeSidebar()">✕</button>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="sidebar-item active" onclick="showTab('dash',this)"><span class="ico">📊</span>แดชบอร์ด</button>
+    <button class="sidebar-item" onclick="showTab('daily',this)"><span class="ico">📅</span>สรุปรายวัน</button>
+    <button class="sidebar-item" onclick="showTab('entry',this)"><span class="ico">➕</span>บันทึกรายการ</button>
+    <button class="sidebar-item" onclick="showTab('receipt',this)"><span class="ico">📷</span>สแกนใบเสร็จ</button>
+    <button class="sidebar-item" onclick="showTab('line',this)"><span class="ico">🔔</span>LINE OA</button>
+    <button class="sidebar-item" onclick="showTab('export',this)"><span class="ico">📤</span>Export</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user" id="sidebarUser"></div>
+    <button class="btn secondary sm" style="width:100%;justify-content:center;" id="sidebarLogoutBtn">🚪 ออกจากระบบ</button>
+  </div>
+</div>
+
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="brand">
@@ -157,7 +212,9 @@ tfoot tr td{font-weight:700;border-top:2px solid var(--line);border-bottom:none;
     <div class="status-bar" id="status"><span class="spin"></span>กำลังโหลด...</div>
     <span id="loggedInUser" style="font-size:12px;color:rgba(255,255,255,.8);"></span>
     <button class="btn white sm" id="refreshBtn">↻ รีเฟรช</button>
-    <button class="btn sm" id="logoutBtn" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">🚪 ออก</button>
+    <button class="hamburger" onclick="openSidebar()" title="เมนู" style="margin-left:4px;">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </div>
 
@@ -390,7 +447,7 @@ tfoot tr td{font-weight:700;border-top:2px solid var(--line);border-bottom:none;
 </div><!-- /container -->
 
 <script>
-const API_URL='https://script.google.com/macros/s/AKfycbymaW7smaoyLG9KQZqg4XVJNUADhEsTaOsAQmVqrH9qgFv_yJVV5cX0k5MTMkMee0tX-w/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbzmJITF-98cDBSMohRhIKnJ6ibVcmUvnLNe4rtYHxVrRHT64WlusHappS-FAo_6Mp37lg/exec';
 
 const USERS={'admin':'wasan2024','owner':'print@888','staff':'staff123'};
 
@@ -402,6 +459,7 @@ function doLogin(){
     document.getElementById('loginOverlay').style.display='none';
     sessionStorage.setItem('wp_auth',user);
     document.getElementById('loggedInUser').textContent='👤 '+user;
+    document.getElementById('sidebarUser').textContent='👤 เข้าสู่ระบบในฐานะ: '+user;
     loadData();loadSetupCategories();
   }else{
     err.style.display='block';document.getElementById('loginPass').value='';
@@ -415,10 +473,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(saved){
     document.getElementById('loginOverlay').style.display='none';
     document.getElementById('loggedInUser').textContent='👤 '+saved;
+    document.getElementById('sidebarUser').textContent='👤 เข้าสู่ระบบในฐานะ: '+saved;
     loadData();loadSetupCategories();
   }
 });
 
+document.getElementById('sidebarLogoutBtn').addEventListener('click',()=>{
+  if(confirm('ต้องการออกจากระบบหรือไม่?')){
+    sessionStorage.removeItem('wp_auth');
+    document.getElementById('loginOverlay').style.display='flex';
+    document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';
+    document.getElementById('loggedInUser').textContent='';document.getElementById('sidebarUser').textContent='';
+    closeSidebar();
+  }
+});
 document.getElementById('logoutBtn').addEventListener('click',()=>{
   if(confirm('ต้องการออกจากระบบหรือไม่?')){
     sessionStorage.removeItem('wp_auth');
@@ -445,11 +513,24 @@ const dayLabel=k=>{const[y,m,d]=k.split('-');return new Date(+y,+m-1,+d).toLocal
 
 function showTab(t,btn){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
-  if(btn)btn.classList.add('active');
+  // mark active sidebar item
+  document.querySelectorAll('.sidebar-item').forEach(b=>{
+    if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+t+"'"))b.classList.add('active');
+  });
   if(t==='line')buildLinePreview();
   if(t==='daily')renderDailyChart();
+  closeSidebar();
+}
+
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
 }
 
 async function loadData(){
@@ -554,8 +635,10 @@ function renderProductTable(rows){
   const emptyInc='<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">กด "+ เพิ่มรายการ" เพื่อเลือกสินค้าจาก Sheet</td></tr>';
   const emptyExp='<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">กด "+ เพิ่มรายการ" เพื่อเลือกสินค้าจาก Sheet</td></tr>';
 
-  document.getElementById('productIncomeBody').innerHTML=incData.length?incData.map(p=>`<tr><td>${p.name}</td><td class="amt inc">${p.total>0?fmt(p.total):'—'}</td><td style="text-align:right;color:var(--muted)">${p.qty>0?p.qty+' ชิ้น':'—'}</td><td>${delBtn(p.name,'income')}</td></tr>`).join(''):emptyInc;
-  document.getElementById('productExpenseBody').innerHTML=expData.length?expData.map(p=>`<tr><td>${p.name}</td><td class="amt exp">${p.total>0?'-'+fmt(p.total):'—'}</td><td style="text-align:right;color:var(--muted)">${p.qty>0?p.qty+' ชิ้น':'—'}</td><td>${delBtn(p.name,'expense')}</td></tr>`).join(''):emptyExp;
+  const sortedInc=[...incData].sort((a,b)=>b.total-a.total);
+  const sortedExp=[...expData].sort((a,b)=>b.total-a.total);
+  document.getElementById('productIncomeBody').innerHTML=sortedInc.length?sortedInc.map(p=>`<tr><td>${p.name}</td><td class="amt inc">${p.total>0?fmt(p.total):'—'}</td><td style="text-align:right;color:var(--muted)">${p.qty>0?p.qty+' ชิ้น':'—'}</td><td>${delBtn(p.name,'income')}</td></tr>`).join(''):emptyInc;
+  document.getElementById('productExpenseBody').innerHTML=sortedExp.length?sortedExp.map(p=>`<tr><td>${p.name}</td><td class="amt exp">${p.total>0?'-'+fmt(p.total):'—'}</td><td style="text-align:right;color:var(--muted)">${p.qty>0?p.qty+' ชิ้น':'—'}</td><td>${delBtn(p.name,'expense')}</td></tr>`).join(''):emptyExp;
 
   const totInc=incData.reduce((s,p)=>s+p.total,0),totIncQty=incData.reduce((s,p)=>s+p.qty,0);
   const totExp=expData.reduce((s,p)=>s+p.total,0),totExpQty=expData.reduce((s,p)=>s+p.qty,0);
