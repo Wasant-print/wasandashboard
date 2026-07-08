@@ -17,19 +17,30 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--paper);color:var(--ink);}
-/* LOGIN */
-.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#0d47a1,#1565c0);display:flex;align-items:center;justify-content:center;z-index:9999;}
-.login-box{background:#fff;border-radius:20px;padding:36px 32px;width:90%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center;}
-.login-logo{width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#0d47a1,#1565c0);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:26px;margin:0 auto 16px;font-family:'Fraunces',serif;}
-.login-box h2{font-family:'Fraunces',serif;font-size:22px;margin-bottom:4px;color:#0a1628;}
-.login-box .sub{font-size:13px;color:#5a7aa0;margin-bottom:24px;}
-.login-field{text-align:left;margin-bottom:14px;}
-.login-field label{display:block;font-size:12.5px;font-weight:700;color:#5a7aa0;margin-bottom:5px;}
-.login-field input{width:100%;padding:11px 14px;border:1.5px solid #cce0ff;border-radius:10px;font-family:inherit;font-size:14px;box-sizing:border-box;transition:.15s;}
-.login-field input:focus{outline:none;border-color:#1565c0;box-shadow:0 0 0 3px rgba(21,101,192,.12);}
-.login-btn{width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#0d47a1,#1565c0);color:#fff;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:.15s;}
-.login-btn:hover{filter:brightness(.92);}
-.login-error{color:#c0392b;font-size:13px;margin-top:10px;min-height:20px;}
+/* LOGIN PIN */
+.login-overlay{position:fixed;inset:0;background:#f5f5f0;display:flex;align-items:stretch;z-index:9999;}
+.login-left{flex:1;background:linear-gradient(160deg,#1a3d2e 0%,#2d6a4f 60%,#40916c 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;color:#fff;}
+.login-left .brand-icon{width:90px;height:90px;border-radius:20px;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;font-size:36px;color:#fff;margin-bottom:20px;border:2px solid rgba(255,255,255,.2);}
+.login-left h1{font-family:'Fraunces',serif;font-size:26px;font-weight:700;margin-bottom:10px;text-align:center;}
+.login-left p{font-size:14px;color:rgba(255,255,255,.75);text-align:center;line-height:1.6;max-width:260px;}
+.login-right{width:420px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;background:#fff;}
+.login-right h2{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:6px;}
+.login-right .sub{font-size:13px;color:#888;margin-bottom:28px;text-align:center;}
+.pin-dots{display:flex;gap:14px;margin-bottom:28px;}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid #ccc;transition:.2s;}
+.pin-dot.filled{background:#1565c0;border-color:#1565c0;}
+.pin-dot.error{background:#c0392b;border-color:#c0392b;}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:280px;}
+.pin-btn{height:72px;border-radius:16px;border:none;background:#f5f5f0;font-family:inherit;font-size:26px;font-weight:600;color:#1a1a1a;cursor:pointer;transition:.15s;box-shadow:0 2px 6px rgba(0,0,0,.06);}
+.pin-btn:hover{background:#e8e8e2;transform:scale(.97);}
+.pin-btn:active{transform:scale(.93);}
+.pin-btn.del{font-size:20px;color:#888;}
+.pin-btn.empty{background:transparent;box-shadow:none;cursor:default;}
+.pin-error{color:#c0392b;font-size:13px;margin-top:14px;min-height:20px;text-align:center;}
+.login-links{margin-top:20px;display:flex;flex-direction:column;gap:10px;width:100%;align-items:center;}
+.login-link{background:none;border:none;font-family:inherit;font-size:13px;color:#888;cursor:pointer;display:flex;align-items:center;gap:8px;}
+.login-link:hover{color:#1565c0;}
+@media(max-width:700px){.login-left{display:none;}.login-right{width:100%;padding:32px 24px;}.login-overlay{background:#fff;}}
 /* TOPBAR */
 .topbar{background:linear-gradient(135deg,var(--primary-dark),var(--primary));padding:18px 28px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 2px 12px rgba(13,71,161,.3);}
 .brand{display:flex;align-items:center;gap:14px;}
@@ -162,16 +173,50 @@ tfoot tr td{font-weight:700;border-top:2px solid var(--line);border-bottom:none;
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN PIN -->
 <div class="login-overlay" id="loginOverlay">
-  <div class="login-box">
-    <div class="login-logo">วส</div>
-    <h2>Wasan Print</h2>
-    <p class="sub">กรุณาเข้าสู่ระบบเพื่อดูแดชบอร์ด</p>
-    <div class="login-field"><label>Username</label><input type="text" id="loginUser" placeholder="กรอก username" autocomplete="username"></div>
-    <div class="login-field"><label>Password</label><input type="password" id="loginPass" placeholder="กรอก password" autocomplete="current-password"></div>
-    <button class="login-btn" onclick="doLogin()">เข้าสู่ระบบ</button>
-    <div class="login-error" id="loginError">Username หรือ Password ไม่ถูกต้อง</div>
+  <div class="login-left">
+    <div class="brand-icon">วส</div>
+    <h1>Wasan Print Dashboard</h1>
+    <p>ระบบจัดการรายรับ-รายจ่าย<br>สรุปยอด วิเคราะห์ข้อมูล ครบในที่เดียว</p>
+  </div>
+  <div class="login-right">
+    <h2>เข้าสู่ระบบด้วย PIN</h2>
+    <p class="sub" id="pinSubText">กรอกรหัส PIN 4 หลัก</p>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn empty"></button>
+      <button class="pin-btn" onclick="pinPress('0')">0</button>
+      <button class="pin-btn del" onclick="pinDelete()">⌫</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="login-links">
+      <button class="login-link" onclick="showUserPassLogin()">👤 เข้าสู่ระบบด้วยชื่อผู้ใช้ (ผู้ดูแล)</button>
+    </div>
+    <!-- fallback user/pass (hidden) -->
+    <div id="userPassForm" style="display:none;width:100%;margin-top:16px;">
+      <input type="text" id="loginUser" placeholder="Username" autocomplete="username"
+        style="width:100%;padding:10px 12px;border:1.5px solid #cce0ff;border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px;">
+      <input type="password" id="loginPass" placeholder="Password" autocomplete="current-password"
+        style="width:100%;padding:10px 12px;border:1.5px solid #cce0ff;border-radius:10px;font-family:inherit;font-size:14px;margin-bottom:10px;">
+      <button onclick="doUserPassLogin()" style="width:100%;padding:11px;border-radius:10px;border:none;background:#1565c0;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;">เข้าสู่ระบบ</button>
+      <button onclick="hideuserPassLogin()" style="width:100%;padding:8px;border:none;background:none;font-family:inherit;font-size:13px;color:#888;cursor:pointer;margin-top:6px;">← กลับไปใช้ PIN</button>
+      <div class="pin-error" id="loginError"></div>
+    </div>
   </div>
 </div>
 
@@ -449,26 +494,81 @@ tfoot tr td{font-weight:700;border-top:2px solid var(--line);border-bottom:none;
 <script>
 const API_URL='https://script.google.com/macros/s/AKfycbzmJITF-98cDBSMohRhIKnJ6ibVcmUvnLNe4rtYHxVrRHT64WlusHappS-FAo_6Mp37lg/exec';
 
+// ══ PIN CONFIG ══
+// เปลี่ยน PIN ได้ที่นี่ (4 หลัก)
+const PIN_USERS = {
+  '1234': 'owner',
+  '5678': 'staff',
+  '0000': 'admin'
+};
 const USERS={'admin':'wasan2024','owner':'print@888','staff':'staff123'};
 
-function doLogin(){
+let pinInput = '';
+
+function pinPress(n){
+  if(pinInput.length>=4)return;
+  pinInput+=n;
+  updatePinDots();
+  if(pinInput.length===4)setTimeout(checkPin,120);
+}
+
+function pinDelete(){
+  pinInput=pinInput.slice(0,-1);
+  updatePinDots();
+  document.getElementById('pinError').textContent='';
+}
+
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    const dot=document.getElementById('dot'+i);
+    dot.classList.toggle('filled',i<pinInput.length);
+    dot.classList.remove('error');
+  }
+}
+
+function checkPin(){
+  if(PIN_USERS[pinInput]){
+    const user=PIN_USERS[pinInput];
+    loginSuccess(user);
+  }else{
+    // shake error
+    for(let i=0;i<4;i++)document.getElementById('dot'+i).classList.add('error');
+    document.getElementById('pinError').textContent='PIN ไม่ถูกต้อง กรุณาลองใหม่';
+    setTimeout(()=>{pinInput='';updatePinDots();document.getElementById('pinError').textContent='';},900);
+  }
+}
+
+function loginSuccess(user){
+  document.getElementById('loginOverlay').style.display='none';
+  sessionStorage.setItem('wp_auth',user);
+  document.getElementById('loggedInUser').textContent='👤 '+user;
+  document.getElementById('sidebarUser').textContent='👤 เข้าสู่ระบบในฐานะ: '+user;
+  loadData();loadSetupCategories();
+}
+
+function showUserPassLogin(){
+  document.getElementById('userPassForm').style.display='block';
+  document.getElementById('pinSubText').style.display='none';
+}
+function hideuserPassLogin(){
+  document.getElementById('userPassForm').style.display='none';
+  document.getElementById('pinSubText').style.display='block';
+  pinInput='';updatePinDots();
+}
+function doUserPassLogin(){
   const user=document.getElementById('loginUser').value.trim();
   const pass=document.getElementById('loginPass').value;
   const err=document.getElementById('loginError');
   if(USERS[user]&&USERS[user]===pass){
-    document.getElementById('loginOverlay').style.display='none';
-    sessionStorage.setItem('wp_auth',user);
-    document.getElementById('loggedInUser').textContent='👤 '+user;
-    document.getElementById('sidebarUser').textContent='👤 เข้าสู่ระบบในฐานะ: '+user;
-    loadData();loadSetupCategories();
+    loginSuccess(user);
   }else{
-    err.style.display='block';document.getElementById('loginPass').value='';
-    setTimeout(()=>err.style.display='none',3000);
+    err.textContent='Username หรือ Password ไม่ถูกต้อง';
+    setTimeout(()=>err.textContent='',2500);
   }
 }
+function doLogin(){doUserPassLogin();}
 
 document.addEventListener('DOMContentLoaded',()=>{
-  ['loginUser','loginPass'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
   const saved=sessionStorage.getItem('wp_auth');
   if(saved){
     document.getElementById('loginOverlay').style.display='none';
