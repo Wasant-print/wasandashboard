@@ -487,15 +487,6 @@ document.getElementById('sidebarLogoutBtn').addEventListener('click',()=>{
     closeSidebar();
   }
 });
-document.getElementById('logoutBtn').addEventListener('click',()=>{
-  if(confirm('ต้องการออกจากระบบหรือไม่?')){
-    sessionStorage.removeItem('wp_auth');
-    document.getElementById('loginOverlay').style.display='flex';
-    document.getElementById('loginUser').value='';
-    document.getElementById('loginPass').value='';
-    document.getElementById('loggedInUser').textContent='';
-  }
-});
 
 let allRows=[],monthlyChart,categoryChart,dailyChart,linePeriod='day';
 let receiptBase64=null,receiptMime=null,receiptItems=[];
