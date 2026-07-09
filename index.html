@@ -597,7 +597,11 @@ document.getElementById('logoutBtn').addEventListener('click',()=>{
   }
 });
 
-let allRows=[],monthlyChart,categoryChart,dailyChart,linePeriod='day';
+let allRows=[],monthlyChart,categoryChart,dailyChart,linePeriod='day',receiptBase64=null,receiptMime=null,receiptItems=[];
+let setupIncome=[],setupExpense=[];
+let selectedIncome=JSON.parse(localStorage.getItem('wp_prod_inc')||'[]');
+let selectedExpense=JSON.parse(localStorage.getItem('wp_prod_exp')||'[]');
+let pickerMode='income',pickerTemp=[];
 let receiptBase64=null,receiptMime=null,receiptItems=[];
 let setupIncome=[],setupExpense=[];
 let selectedIncome=JSON.parse(localStorage.getItem('wp_prod_inc')||'[]');
