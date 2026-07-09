@@ -587,22 +587,8 @@ document.getElementById('sidebarLogoutBtn').addEventListener('click',()=>{
     closeSidebar();
   }
 });
-document.getElementById('logoutBtn').addEventListener('click',()=>{
-  if(confirm('ต้องการออกจากระบบหรือไม่?')){
-    sessionStorage.removeItem('wp_auth');
-    document.getElementById('loginOverlay').style.display='flex';
-    document.getElementById('loginUser').value='';
-    document.getElementById('loginPass').value='';
-    document.getElementById('loggedInUser').textContent='';
-  }
-});
 
 let allRows=[],monthlyChart,categoryChart,dailyChart,linePeriod='day',receiptBase64=null,receiptMime=null,receiptItems=[];
-let setupIncome=[],setupExpense=[];
-let selectedIncome=JSON.parse(localStorage.getItem('wp_prod_inc')||'[]');
-let selectedExpense=JSON.parse(localStorage.getItem('wp_prod_exp')||'[]');
-let pickerMode='income',pickerTemp=[];
-let receiptBase64=null,receiptMime=null,receiptItems=[];
 let setupIncome=[],setupExpense=[];
 let selectedIncome=JSON.parse(localStorage.getItem('wp_prod_inc')||'[]');
 let selectedExpense=JSON.parse(localStorage.getItem('wp_prod_exp')||'[]');
